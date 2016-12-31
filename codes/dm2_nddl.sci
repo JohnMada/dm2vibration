@@ -1,17 +1,3 @@
-function u=rvla(y0, t0, t1, Eta) // reponse en vibration libre amortie
-    // y0: vecteur des CI
-    // t0: temps initial, inutilise
-    // t1: intervalle de temps de simulation
-    // Eta: facteur d'amortissement visqueux
-    // Retourne une matrice avec en premiere ligne le deplacement et en deuxieme ligne la vitesse
-    c = Eta*c0 // coefficient de frottement visqueux
-    function [Y]=fonction(t, V) // fonction a fournir a ODE pour resolution de l equation diff du second ordre regissant le systeme amorti
-        M = [[0, 1];[-k/m, -c/m]] // matrice d iteration
-        Y = M*V         
-    endfunction
-    [u]=ode(y0, t0, t1, fonction);
-endfunction
-
 function [K,M] = matrices(EI,dx,rho)
     // Construction des matrices de masse et de raideur elementaires 
     K = zeros(4,4);
@@ -28,49 +14,75 @@ function [K,M] = matrices(EI,dx,rho)
     K(4,4) = 8*EI/dx;
      
     // Matrice de masse
-    M(1,2) = 12*EI/dx^2; M(1,3) = -24*EI/dx^3; M(1,4) = 12*EI/dx^2;
-    M(2,3) = -12*EI/dx^2; M(2,4) = 4*EI/dx;
-    M(3,4) = -12*EI/dx^2;
+    M(1,2) = 0.0523809523809524*S*dx^2*rho; M(1,3) = 0.128571429*S*dx*rho ; M(1,4) = -.030952380952381*S*dx^2*rho;
+    M(2,3) = .030952380952381*S*dx^2*rho; M(2,4) = -.00714285714285714*S*dx^2*rho;
+    M(3,4) = -.0523809523809524*S*dx^2*rho;
         
     M = M+M';
-    M(1,1) = 24*EI/dx^3; 
-    M(2,2) = 8*EI/dx;
-    M(3,3) = 24*EI/dx^3;
-    M(4,4) = 8*EI/dx;  
+    M(1,1) = 0.37142857142857*S*dx*rho; 
+    M(2,2) = .00952380952380952*S*dx^3*rho;
+    M(3,3) = .371428571428571*S*dx*rho;
+    M(4,4) = .00952380952380952*S*dx^3*rho;  
 endfunction
 
-function y=rvlfs(y0, t0, t1, ts, tc, eta) // reponse en vibration avec frottement sec
-    // y0: vecteur des CI
-    // t0: temps initial, inutilise
-    // t1: intervalle de temps de simulation
-    // ts: force maximale du frottement statique
-    // tc: force de frottement dynamique
-    // Utilise la méthode RK4 pour calculer l'oscillation avec frottement sec
-    // Retourne une matrice avec en premiere ligne le deplacement et en deuxieme ligne la vitesse
-    dt = t1(2)-t1(1); // pas de temps
-    n = length(t1); // nombre d'itérations
-    y = zeros(2,n);
-    y(:,1) = y0; // debut initialisation
-    K1 = dt*iterfsd(y0);
-    K2 = dt*iterfsd(y0+K1/2);
-    K3 = dt*iterfsd(y0+K2/2);
-    K4 = dt*iterfsd(y0+K3);
-    y(:,2) = y0 + K1/6 + K2/3 + K3/3 + K4/6; // fin initialisation
-    for i=2:n-1      
-        yi = y(:,i); // contient y_i et dy_i/dt
-        K1 = dt*iterfsd(yi);
-        K2 = dt*iterfsd(yi+K1/2);
-        K3 = dt*iterfsd(yi+K2/2);
-        K4 = dt*iterfsd(yi+K3);
-        y(:,i+1) = yi + K1/6 + K2/3 + K3/3 + K4/6;  
-        if (yi(2)*y(2,i+1)<= 0) // vitesse nulle (ie traverse l'axe des abscisses)      
-            if k*abs(yi(1)) < ts // frottement statique
-//                K1 = dt*iterfss(yi);
-//                K2 = dt*iterfss(yi+K1/2);
-//                K3 = dt*iterfss(yi+K2/2);
-//                K4 = dt*iterfss(yi+K3);               
-                y(:,i+1) = [yi(1);0]; // arret du mouvement
-            end
-        end    
+function md = massed(m)
+    // Matrice de masse de l'element qui porte le disque
+    md = zeros(4,4);
+endfunction
+
+function tab = tbc(Ne)
+    // table de connexion
+    // Ne : nombre d'elements
+    tab = zeros(Ne,4); // 4 colonnes correspondant chacune à un degré de liberté dans l'espace de reference et Ne lignes correspondant chacun a un element
+    for i = 1:Ne
+        for j = 1:4
+            tab(i,j) = j+2*(i-1)
+        end
     end
+endfunction
+
+function [K, M]=assemblage(Ne)
+    // fonction d'assemblage des matrices elementaires en une matrice globale
+    // Ne : nombre d'elements
+    nddl = 2*Ne + 2; // nombre total de ddl
+    [ke, me] = matrices(EI,dx,rho)
+    tab = tbc(Ne); // table de connexion
+    // assemblage
+    K = zeros(nddl,nddl); M = zeros(nddl,nddl);
+    for i=1:Ne/2-1
+        for j=1:4
+            for l=1:4 // j et l = index dans la matrice elementaire
+                idg1 = tab(i,j); idg2 = tab(i,l); // idgi = index dans la matrice globale
+                K(idg1,idg2) = K(idg1,idg2) + ke(j,l);
+                M(idg1,idg2) = M(idg1,idg2) + me(j,l);
+            end
+        end
+    end
+    // element qui porte le disque
+    for j=1:4
+        for l=1:4 // j et l = index dans la matrice elementaire
+            idg1 = tab(Ne/2,j); idg2 = tab(Ne/2,l); // idgi = index dans la matrice globale
+            K(idg1,idg2) = K(idg1,idg2) + ke(j,l);
+            M(idg1,idg2) = M(idg1,idg2) + me(j,l);
+        end
+    end
+    // elements restants
+    for i=Ne/2+1:Ne
+        for j=1:4
+            for l=1:4 // j et l = index dans la matrice elementaire
+                idg1 = tab(i,j); idg2 = tab(i,l); // idgi = index dans la matrice globale
+                K(idg1,idg2) = K(idg1,idg2) + ke(j,l);
+                M(idg1,idg2) = M(idg1,idg2) + me(j,l);
+            end
+        end
+    end
+    //// Conditions limites
+    // Deplacement nul sur le ddl 1 (V=0)
+    K(1,:) = 0; M(1,:) = 0;
+    K(:,1) = 0; M(:,1) = 0;
+    K(1,1) = 1; M(1,1) = 1;
+    // Deplacement nul sur l avant dernier ddl (V=0)
+    K(nddl-1,:) = 0; M(nddl-1,:) = 0;
+    K(:,nddl-1) = 0; M(:,nddl-1) = 0;
+    K(nddl-1,nddl-1) = 1; M(nddl-1,nddl-1) = 1;       
 endfunction
