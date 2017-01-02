@@ -59,11 +59,13 @@ function [K, M]=assemblage(Ne)
         end
     end
     // element qui porte le disque
+    // i = Ne/2
+    med = me; med(3,3) = med(3,3) + m
     for j=1:4
         for l=1:4 // j et l = index dans la matrice elementaire
             idg1 = tab(Ne/2,j); idg2 = tab(Ne/2,l); // idgi = index dans la matrice globale
             K(idg1,idg2) = K(idg1,idg2) + ke(j,l);
-            M(idg1,idg2) = M(idg1,idg2) + me(j,l);
+            M(idg1,idg2) = M(idg1,idg2) + med(j,l);
         end
     end
     // elements restants
