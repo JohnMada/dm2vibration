@@ -25,11 +25,6 @@ function [K,M] = matrices(EI,dx,rho)
     M(4,4) = .00952380952380952*S*dx^3*rho;  
 endfunction
 
-function md = massed(m)
-    // Matrice de masse de l'element qui porte le disque
-    md = zeros(4,4);
-endfunction
-
 function tab = tbc(Ne)
     // table de connexion
     // Ne : nombre d'elements
@@ -45,11 +40,12 @@ function [K, M]=assemblage(Ne)
     // fonction d'assemblage des matrices elementaires en une matrice globale
     // Ne : nombre d'elements
     nddl = 2*Ne + 2; // nombre total de ddl
+    dx = L/Ne; // longueur d'un element
     [ke, me] = matrices(EI,dx,rho)
     tab = tbc(Ne); // table de connexion
     // assemblage
     K = zeros(nddl,nddl); M = zeros(nddl,nddl);
-    for i=1:Ne/2-1
+    for i=1:Ne/2-1 // elements avant l'element porteur
         for j=1:4
             for l=1:4 // j et l = index dans la matrice elementaire
                 idg1 = tab(i,j); idg2 = tab(i,l); // idgi = index dans la matrice globale
@@ -68,8 +64,7 @@ function [K, M]=assemblage(Ne)
             M(idg1,idg2) = M(idg1,idg2) + med(j,l);
         end
     end
-    // elements restants
-    for i=Ne/2+1:Ne
+    for i=Ne/2+1:Ne // elements apres l'element porteur
         for j=1:4
             for l=1:4 // j et l = index dans la matrice elementaire
                 idg1 = tab(i,j); idg2 = tab(i,l); // idgi = index dans la matrice globale
@@ -79,12 +74,16 @@ function [K, M]=assemblage(Ne)
         end
     end
     //// Conditions limites
-    // Deplacement nul sur le ddl 1 (V=0)
-    K(1,:) = 0; M(1,:) = 0;
-    K(:,1) = 0; M(:,1) = 0;
-    K(1,1) = 1; M(1,1) = 1;
-    // Deplacement nul sur l avant dernier ddl (V=0)
-    K(nddl-1,:) = 0; M(nddl-1,:) = 0;
-    K(:,nddl-1) = 0; M(:,nddl-1) = 0;
-    K(nddl-1,nddl-1) = 1; M(nddl-1,nddl-1) = 1;       
+    // Deplacement nul sur le ddl 1 (V1=0)
+    // Deplacement nul sur l avant dernier ddl (V_(nddl-1)=0)
+    K = K([2:nddl-2,nddl],[2:nddl-2,nddl]);
+    M = M([2:nddl-2,nddl],[2:nddl-2,nddl]);
+    
+//    K(1,:) = 0; M(1,:) = 0;
+//    K(:,1) = 0; M(:,1) = 0;
+//    K(1,1) = 1; M(1,1) = 1;
+//    // Deplacement nul sur l avant dernier ddl (V=0)
+//    K(nddl-1,:) = 0; M(nddl-1,:) = 0;
+//    K(:,nddl-1) = 0; M(:,nddl-1) = 0;
+//    K(nddl-1,nddl-1) = 1; M(nddl-1,nddl-1) = 1;       
 endfunction
