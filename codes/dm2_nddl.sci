@@ -90,3 +90,18 @@ function [K, M]=assemblage(Ne)
 //    K(:,nddl-1) = 0; M(:,nddl-1) = 0;
 //    K(nddl-1,nddl-1) = 1; M(nddl-1,nddl-1) = 1;       
 endfunction
+
+function f = sollicit(w,f0,ne, t)
+    // Vecteur des forces harmoniues nodales
+    // f : vecteur des forces nodales
+    // w : pulsation de la sollicitation
+    // f0 : amplitude initiale
+    // ne : nombre d'elements
+    // t : vecteur des temps
+    nddl = 2*ne+2;
+    f = zeros(nddl,length(t));
+    f(nddl/2-1,:) = f0*cos(w*t);
+    // Prise en compte des CL
+    f = f([2:nddl-2, nddl],:);
+    //
+endfunction
