@@ -12,17 +12,20 @@ function [K,M] = matrices(EI,dx,rho)
     K(2,2) = 8*EI/dx;
     K(3,3) = 24*EI/dx^3;
     K(4,4) = 8*EI/dx;
+    K = K/2;
      
     // Matrice de masse
-    M(1,2) = 0.0523809523809524*S*dx^2*rho; M(1,3) = 0.128571429*S*dx*rho ; M(1,4) = -.030952380952381*S*dx^2*rho;
-    M(2,3) = .030952380952381*S*dx^2*rho; M(2,4) = -.00714285714285714*S*dx^2*rho;
-    M(3,4) = -.0523809523809524*S*dx^2*rho;
+    M(1,2) = 11/6*dx; M(1,3) = 9/2 ; M(1,4) = -13/12*dx;
+    M(2,3) = 13/12*dx; M(2,4) = -1/4*dx^2;
+    M(3,4) = -11/6*dx;
         
     M = M+M';
-    M(1,1) = 0.37142857142857*S*dx*rho; 
-    M(2,2) = .00952380952380952*S*dx^3*rho;
-    M(3,3) = .371428571428571*S*dx*rho;
-    M(4,4) = .00952380952380952*S*dx^3*rho;  
+    M(1,1) = 13; 
+    M(2,2) = 1/3*dx^2;
+    M(3,3) = 13;
+    M(4,4) = 1/3*dx^2;
+    
+    M = M*rho*S*dx/35;  
 endfunction
 
 function tab = tbc(Ne)
@@ -56,7 +59,7 @@ function [K, M]=assemblage(Ne)
     end
     // element qui porte le disque
     // i = Ne/2
-    med = me; med(3,3) = med(3,3) + m
+    med = me; med(3,3) = med(3,3) + m;
     for j=1:4
         for l=1:4 // j et l = index dans la matrice elementaire
             idg1 = tab(Ne/2,j); idg2 = tab(Ne/2,l); // idgi = index dans la matrice globale
