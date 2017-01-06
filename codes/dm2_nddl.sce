@@ -11,7 +11,7 @@ exec("dm2_nddl.sci",-1);
 //Donnees du probleme
 // Poutre
 rho = 5000; // kg/m3
-L = 1; // m longueur*
+L = 1; // m longueur
 h = .05; // m hauteur de section
 b = .05; // m base de section
 E = 2e11; // N/m2 module d'Young de la poutre
@@ -23,7 +23,7 @@ w = 5000; // 2*pi/s pulsation de l'excitation
 // Disque
 m = 8; // kg masse du disque
 R = 0.15; // m rayon du disque
-Iz = m*R^2; // moment d'inertie du disqueautour de z
+Iz = m*R^2; // moment d'inertie du disque autour de z
 // Approximation
 /// 2ddl
 //
@@ -39,10 +39,17 @@ dx = L/ne;
 C = .5*K + .1*M; // Matrice d'amortissement visqueux,frottement proportionnel
 
 // Analyse modale
-[ki, mi, V] = spec(K,M); // resp. raideur modale et masse modale a un facteur pres
+[al, be, V] = spec(K,M); // val. propres generalisees
+
+ki = vmodales(V, K); // vecteur des raideurs modales
+ci = vmodales(V, C); // vecteur des amortissements modaux
+mi = vmodales(V, M); // masses modales
 
 wi = ki./mi; // pulsations modales
 
+B = eigenvscale(mi, V); // vecteurs propres divises par les masses modales associee a leur modes respectifs
+// On peut verifier que Bt*M*B = matrice identite
+
 // RVF
-t = 0:0.01:3; // duree de l'excitation
+t = 0:0.1:3; // duree de l'excitation
 F = sollicit(w,1,ne, t);
