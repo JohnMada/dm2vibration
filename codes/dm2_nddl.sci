@@ -105,3 +105,25 @@ function f = sollicit(w,f0,ne, t)
     f = f([2:nddl-2, nddl],:);
     //
 endfunction
+
+function W = eigenvscale(c, V)
+    // c vecteur de n lignes
+    // V matrice des n vecteurs propres du systeme
+    n = length(c); // ordre du systeme
+    W = zeros(n,n); // Matrice des vecteurs propres normalises
+    for j = 1:n
+        W(:,j) = V(:,j)/sqrt(c(j));
+    end
+endfunction
+
+function mp = vmodales(V, M)
+    // mp : vecteur colonne des masses modales du systeme
+    // V : matrice des vecteurs propres
+    // M : matrice de masse
+    // Marche pour K, M et C -> analyse modale
+    n = size(V,1); // ordre du systeme
+    mp = zeros(n,1);
+    for i = 1:n
+        mp(i) = V(:,i)'*M*V(:,i);
+    end
+endfunction
