@@ -45,7 +45,7 @@ ki = vmodales(V, K); // vecteur des raideurs modales
 ci = vmodales(V, C); // vecteur des amortissements modaux
 mi = vmodales(V, M); // masses modales
 
-wi = ki./mi; // pulsations modales
+wi = sqrt(ki./mi); // pulsations modales carrees
 
 B = eigenvscale(mi, V); // vecteurs propres divises par les masses modales associee a leur modes respectifs
 // On peut verifier que Bt*M*B = matrice identite
@@ -55,9 +55,19 @@ t = 0:0.1:3; // duree de l'excitation
 F = sollicit(w,1,ne, t);
 
 // Deformees
-X = linspace(0, L, 10*ne+1); // intervalle [0,L]
+X = linspace(0, L, 50*ne+1); // intervalle [0,L]
 // Deformee du mode 1
-v1 = defmodale(X, V(:,1));
-v2 = defmodale(X, V(:,2));
-v3 = defmodale(X, V(:,3));
-v4 = defmodale(X, V(:,4));
+v1 = defmodale(X, B(:,1));
+v2 = defmodale(X, B(:,2));
+v3 = defmodale(X, B(:,3));
+v4 = defmodale(X, B(:,4));
+// Traces de ces modes
+figure('figure_name','modes')
+plot(X, v1, X, v2, X, v3, X, v4);
+txtleg = ['mode 1, w = '+string(wi(1))+' rad/s',
+'mode 2, w = '+string(wi(2))+' rad/s',
+'mode 3, w = '+string(wi(3))+' rad/s',
+'mode 4, w = '+string(wi(4))+' rad/s',
+'mode 5, w = '+string(wi(1))+' rad/s'
+];
+legend(txtleg);
