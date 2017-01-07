@@ -127,3 +127,37 @@ function mp = vmodales(V, M)
         mp(i) = V(:,i)'*M*V(:,i);
     end
 endfunction
+
+// Fonctions de forme
+function phixi = n1(xi)
+    phixi = (1-xi).^2 .* (0.5 + xi/4);
+endfunction
+function phixi = n2(xi)
+    phixi = (1+xi).^2 .* (0.5 - xi/4);
+endfunction
+function psyxi = h1(xi)
+    psyxi = .25*(1-xi).^2 .* (1+xi);
+endfunction
+function psyxi = h2(xi)
+    psyxi = -.25*(1+xi).^2 .* (1-xi);
+endfunction
+
+function phix = basetr(X, ne, k, Phi)
+    // ne : nombre d'elements
+    // dx : longueur d'un element
+    // X : vecteur des abscisses [0,L]
+    // k : numero de l'element concerne
+    dx = L/ne;
+    // passage entre la liste des noeuds et la liste des abscisses references dans x
+    npoints = length(X); // nombre d'abscisses dans x
+    nint = npoints - 1; // nombre d'intervalles dans x. Chaque intervalle separe deux points xk et xk+1
+    npint = nint/ne + 1; // nombre de points constituant un intervalle entre xi et xi+1
+
+    xi = linspace(-1, 1, npint); // xi dans l'espace de reference
+    xk1 = X((npint-1)*(k+1) + 2 - npint); // abscisse de xk+1
+    xk = X((npint-1)*k + 2 - npint); // abscisse de xk
+    x = dx*xi/2 + (xk1 + xk)/2; // x dans l'espace physique [xk, xk+1]
+
+    phix = zeros(1,npoints); // fonction de basse continue par morceau et a support dans [xi,xi+1]
+    phix((npint-1)*k + 2 - npint:(npint-1)*(k+1) + 2 - npint) = Phi(x);) // fonction de forme dans l'espace physique
+endfunction
