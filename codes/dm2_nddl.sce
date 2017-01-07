@@ -53,3 +53,11 @@ B = eigenvscale(mi, V); // vecteurs propres divises par les masses modales assoc
 // RVF
 t = 0:0.1:3; // duree de l'excitation
 F = sollicit(w,1,ne, t);
+
+// Deformees
+X = linspace(0, L, 10*ne+1); // intervalle [0,L]
+// Deformee du mode 1
+v1 = defmodale(X, V(:,1));
+v2 = defmodale(X, V(:,2));
+v3 = defmodale(X, V(:,3));
+v4 = defmodale(X, V(:,4));
