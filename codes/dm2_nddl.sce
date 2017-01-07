@@ -6,7 +6,7 @@
 clear;
 clc;
 exec("dm2_nddl.sci",-1);
-//xdel(winsid());
+xdel(winsid());
 
 //Donnees du probleme
 // Poutre
@@ -62,7 +62,8 @@ v2 = defmodale(X, B(:,2));
 v3 = defmodale(X, B(:,3));
 v4 = defmodale(X, B(:,4));
 // Traces de ces modes
-figure('figure_name','modes')
+figure('figure_name','modes','BackgroundColor',[1,1,1])
+title('Déformées');
 plot(X, v1, X, v2, X, v3, X, v4);
 txtleg = ['mode 1, w = '+string(wi(1))+' rad/s',
 'mode 2, w = '+string(wi(2))+' rad/s',
@@ -71,3 +72,4 @@ txtleg = ['mode 1, w = '+string(wi(1))+' rad/s',
 'mode 5, w = '+string(wi(1))+' rad/s'
 ];
 legend(txtleg);
+xsave("results/deformees.png");
