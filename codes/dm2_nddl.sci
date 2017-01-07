@@ -142,7 +142,7 @@ function psyxi = h2(xi)
     psyxi = -.25*(1+xi).^2 .* (1-xi);
 endfunction
 
-function phix = basetr(X, ne, k, Phi)
+function phix = base(X, ne, k, Phi)
     // Trace des fonctions de bases dans l'espace physique [0,L]. Translation
     // ne : nombre d'elements
     // dx : longueur d'un element
@@ -163,26 +163,26 @@ function phix = basetr(X, ne, k, Phi)
     phix((npint-1)*k + 2 - npint:(npint-1)*(k+1) + 2 - npint) = Phi(xi); // fonction de forme dans l'espace physique
 endfunction
 
-function phix = baserot(X, ne, k, H)
-    // Trace des fonctions de bases dans l'espace physique [0,L]. Rotation
-    // ne : nombre d'elements
-    // dx : longueur d'un element
-    // X : vecteur des abscisses [0,L]
-    // k : numero de l'element concerne
-    dx = L/ne;
-    // passage entre la liste des noeuds et la liste des abscisses references dans x
-    npoints = length(X); // nombre d'abscisses dans x
-    nint = npoints - 1; // nombre d'intervalles dans x. Chaque intervalle separe deux points xk et xk+1
-    npint = nint/ne + 1; // nombre de points constituant un intervalle entre xi et xi+1
-
-    xi = linspace(-1, 1, npint); // xi dans l'espace de reference
-    xk1 = X((npint-1)*(k+1) + 2 - npint); // abscisse de xk+1
-    xk = X((npint-1)*k + 2 - npint); // abscisse de xk
-    x = linspace(xk, xk1, npint); //dx*xi/2 + (xk1 + xk)/2; // x dans l'espace physique [xk, xk+1]
-
-    phix = zeros(1,npoints); // fonction de basse continue par morceau et a support dans [xi,xi+1]
-    phix((npint-1)*k + 2 - npint:(npint-1)*(k+1) + 2 - npint) = dx*H(xi); // fonction de forme dans l'espace physique
-endfunction
+//function phix = base(X, ne, k, H)
+//    // Trace des fonctions de bases dans l'espace physique [0,L]. Rotation
+//    // ne : nombre d'elements
+//    // dx : longueur d'un element
+//    // X : vecteur des abscisses [0,L]
+//    // k : numero de l'element concerne
+//    dx = L/ne;
+//    // passage entre la liste des noeuds et la liste des abscisses references dans x
+//    npoints = length(X); // nombre d'abscisses dans x
+//    nint = npoints - 1; // nombre d'intervalles dans x. Chaque intervalle separe deux points xk et xk+1
+//    npint = nint/ne + 1; // nombre de points constituant un intervalle entre xi et xi+1
+//
+//    xi = linspace(-1, 1, npint); // xi dans l'espace de reference
+//    xk1 = X((npint-1)*(k+1) + 2 - npint); // abscisse de xk+1
+//    xk = X((npint-1)*k + 2 - npint); // abscisse de xk
+//    x = linspace(xk, xk1, npint); //dx*xi/2 + (xk1 + xk)/2; // x dans l'espace physique [xk, xk+1]
+//
+//    phix = zeros(1,npoints); // fonction de basse continue par morceau et a support dans [xi,xi+1]
+//    phix((npint-1)*k + 2 - npint:(npint-1)*(k+1) + 2 - npint) = dx*H(xi); // fonction de forme dans l'espace physique
+//endfunction
 
 function vx = defmodale(X, V)
     // Deformation modale sur [0,L]
@@ -195,39 +195,15 @@ function vx = defmodale(X, V)
     nddl = N+2; // nombre totale de degres de libertes, CL de Dirichlet incluses
     nel = nddl/2 - 1; // nombre d'elements
 
-    tab = tbc(nel); // table de connecion
+    tab = tbc(nel); // table de connexions
     vx = zeros(length(X))
 
     v = [0; V(1:N-1); 0; V(N)]; // remise des degres de libertes enleves (V1 = 0 et Vnddl = 0)
-
-    //    vtr = v(1:2:nddl); // ddl correspondant aux translations
-    //    vtr1 = vtr(1:2:length(vtr)); // translations a gauche de leur element respectif (Vi avec i impair)
-    //    Ni = n1;
-    //    for i=1:length(vtr1)
-    //        vx = vx + vtr1(i)*basetr(X, nel, i, Ni);
-    //    end
-    //    vtr2 = vtr(2:2:length(vtr)); // translations a droite de leur element respectif (Vi avec i pair)
-    //    Ni = n2;
-    //    for i=1:length(vtr2)
-    //        vx = vx + vtr2(i)*basetr(X, nel, i, Ni);
-    //    end
-    //    
-    //    vrot = v(2:2:nddl); // ddl correspondant aux translations
-    //    vrot1 = vrot(1:2:length(vrot)); // rotations a gauche de leur element respectif (Theta i avec i impair)
-    //    Hi = h1;
-    //    for i=1:length(vrot1)
-    //        vx = vx + vrot1(i)*baserot(X, nel, i, Hi);
-    //    end
-    //    vrot2 = vrot(2:2:length(vrot)); // rotations a droite de leur element respectif (Theta i avec i pair)
-    //    Hi = h2;
-    //    for i=1:length(vrot2)
-    //        vx = vx + vrot2(i)*baserot(X, nel, i, Hi);
-    //    end
     for i=1:nel
         idg1 = tab(i,1); // indice globale du V à gauche de l'element i
         idg2 = tab(i,2); // indice globale du theta à gauche de l'element i
         idg3 = tab(i,3); // indice globale du V à droite de l'element i
         idg4 = tab(i,4); // indice globale du theta à droite de l'element i
-        vx = vx + v(idg1)*basetr(X, nel, i, n1) + dx*v(idg2)*basetr(X, nel, i, h1) + v(idg3)*basetr(X, nel, i, n2) + dx*v(idg4)*basetr(X, nel, i, h2);
+        vx = vx + v(idg1)*base(X, nel, i, n1) + v(idg2)*base(X, nel, i, h1)/dx + v(idg3)*base(X, nel, i, n2) + v(idg4)*base(X, nel, i, h2)/dx;
     end
 endfunction
