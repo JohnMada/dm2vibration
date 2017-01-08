@@ -92,7 +92,7 @@ function [K, M]=assemblage(Ne)
 endfunction
 
 function f = sollicit(w,f0,ne, t)
-    // Vecteur des forces harmoniues nodales
+    // Vecteur des forces harmoniques nodales
     // f : vecteur des forces nodales
     // w : pulsation de la sollicitation
     // f0 : amplitude initiale
@@ -104,6 +104,23 @@ function f = sollicit(w,f0,ne, t)
     // Prise en compte des CL
     f = f([2:nddl-2, nddl],:);
     //
+endfunction
+
+function syst = matiter(cp,dp)
+    // Construit la matrice d'iteration pour la resolution numerique de la reponse forcee
+    // cp : vecteur des coefficients d amortissement normalises
+    // dp : vecteur des pulsations carrees normalises
+    nm = length(cp); // nombre de modes
+    
+    dinf = zeros(2*nm-1,1); // diagonale inferieure de la matrice
+    dia = zeros(2*nm,1);
+    dsup = repmat([1; 0],nm-1, 1); // diagonale superieure
+    dsup = [dsup; 1]; // 1 0 1 0 ... 1 0 1 0 ... 1 0 1 0 1
+    
+    dinf(1:2:2*nm) = dp; // d1 0 d2 0 ... 0 dp 0 ... 0 dnm
+    dia(2:2:2*nm) = cp; // 0 c1 0 ... 0 cp 0 ... 0 cnm
+    
+    syst = diag(dia) + diag(dinf, -1) + diag(dsup, 1);
 endfunction
 
 function W = eigenvscale(c, V)
