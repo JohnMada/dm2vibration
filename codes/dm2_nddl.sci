@@ -208,6 +208,6 @@ function vx = defmodale(X, V)
         idg2 = tab(i,2); // indice globale du theta à gauche de l'element i
         idg3 = tab(i,3); // indice globale du V à droite de l'element i
         idg4 = tab(i,4); // indice globale du theta à droite de l'element i
-        vx((npint-1)*i + 2 - npint:(npint-1)*(i+1) + 2 - npint) = v(idg1)*base(X, nel, i, n1) + v(idg2)*base(X, nel, i, h1) + v(idg3)*base(X, nel, i, n2) + v(idg4)*base(X, nel, i, h2);
+        vx((npint-1)*i + 2 - npint:(npint-1)*(i+1) + 2 - npint) = v(idg1)*base(X, nel, i, n1) + dx*v(idg2)*base(X, nel, i, h1) + v(idg3)*base(X, nel, i, n2) + dx*v(idg4)*base(X, nel, i, h2);
     end
 endfunction
