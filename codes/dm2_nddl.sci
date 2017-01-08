@@ -159,8 +159,8 @@ function phix = base(X, ne, k, Phi)
     xk = X((npint-1)*k + 2 - npint); // abscisse de xk
     x = linspace(xk, xk1, npint); //dx*xi/2 + (xk1 + xk)/2; // x dans l'espace physique [xk, xk+1]
 
-    phix = zeros(1,npoints); // fonction de basse continue par morceau et a support dans [xi,xi+1]
-    phix((npint-1)*k + 2 - npint:(npint-1)*(k+1) + 2 - npint) = Phi(xi); // fonction de forme dans l'espace physique
+    //phix = zeros(1,npoints); // fonction de basse continue par morceau et a support dans [xi,xi+1]
+    phix = Phi(xi); // fonction de forme dans l'espace physique
 endfunction
 
 //function phix = base(X, ne, k, H)
@@ -195,8 +195,12 @@ function vx = defmodale(X, V)
     nddl = N+2; // nombre totale de degres de libertes, CL de Dirichlet incluses
     nel = nddl/2 - 1; // nombre d'elements
 
+    npoints = length(X); // nombre d'abscisses dans x
+    nint = npoints - 1; // nombre d'intervalles dans x. Chaque intervalle separe deux points xk et xk+1
+    npint = nint/ne + 1; // nombre de points constituant un intervalle entre xi et xi+1
+
     tab = tbc(nel); // table de connexions
-    vx = zeros(length(X))
+    vx = zeros(1,npoints);
 
     v = [0; V(1:N-1); 0; V(N)]; // remise des degres de libertes enleves (V1 = 0 et Vnddl = 0)
     for i=1:nel
@@ -204,6 +208,6 @@ function vx = defmodale(X, V)
         idg2 = tab(i,2); // indice globale du theta à gauche de l'element i
         idg3 = tab(i,3); // indice globale du V à droite de l'element i
         idg4 = tab(i,4); // indice globale du theta à droite de l'element i
-        vx = vx + v(idg1)*base(X, nel, i, n1) + v(idg2)*base(X, nel, i, h1)/dx + v(idg3)*base(X, nel, i, n2) + v(idg4)*base(X, nel, i, h2)/dx;
+        vx((npint-1)*i + 2 - npint:(npint-1)*(i+1) + 2 - npint) = v(idg1)*base(X, nel, i, n1) + v(idg2)*base(X, nel, i, h1) + v(idg3)*base(X, nel, i, n2) + v(idg4)*base(X, nel, i, h2);
     end
 endfunction
