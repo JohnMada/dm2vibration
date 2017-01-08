@@ -45,7 +45,7 @@ ki = vmodales(V, K); // vecteur des raideurs modales
 ci = vmodales(V, C); // vecteur des amortissements modaux
 mi = vmodales(V, M); // masses modales
 
-wi = sqrt(ki./mi); // pulsations modales carrees
+wi = sqrt(ki./mi); // pulsations modales
 
 B = eigenvscale(mi, V); // vecteurs propres divises par les masses modales associee a leur modes respectifs
 // On peut verifier que Bt*M*B = matrice identite
@@ -57,19 +57,29 @@ F = sollicit(w,1,ne, t);
 // Deformees
 X = linspace(0, L, 50*ne+1); // intervalle [0,L]
 // Deformee du mode 1
-v1 = defmodale(X, B(:,1));
-v2 = defmodale(X, B(:,2));
-v3 = defmodale(X, B(:,3));
-v4 = defmodale(X, B(:,4));
+v1 = defmodale(X, B(:,$));
+v2 = defmodale(X, B(:,$-1));
+v3 = defmodale(X, B(:,$-2));
+v4 = defmodale(X, B(:,$-3));
+v5 = defmodale(X, B(:,$-4));
 // Traces de ces modes
-figure('figure_name','modes','BackgroundColor',[1,1,1])
+figure('figure_name','modes symétriques','BackgroundColor',[1,1,1])
 title('Déformées');
-plot(X, v1, X, v2, X, v3, X, v4);
-txtleg = ['mode 1, w = '+string(wi(1))+' rad/s',
-'mode 2, w = '+string(wi(2))+' rad/s',
-'mode 3, w = '+string(wi(3))+' rad/s',
-'mode 4, w = '+string(wi(4))+' rad/s',
-'mode 5, w = '+string(wi(1))+' rad/s'
+plot(X, v1, X, v3, X, v5);
+txtlegs = [
+'mode 1, w = '+string(wi($))+' rad/s',
+'mode 3, w = '+string(wi($-2))+' rad/s',
+'mode 5, w = '+string(wi($-4))+' rad/s'
 ];
-legend(txtleg);
-xsave("results/deformees.png");
+legend(txtlegs);
+xsave("results/deformees_sym.png");
+
+figure('figure_name','modes anti-symétriques','BackgroundColor',[1,1,1])
+title('Déformées');
+plot(X, v2, X, v4);
+txtlegas = [
+'mode 2, w = '+string(wi($-1))+' rad/s',
+'mode 4, w = '+string(wi($-3))+' rad/s'
+];
+legend(txtlegas);
+xsave("results/deformees_asym.png");
