@@ -107,7 +107,7 @@ function f = sollicit(w,f0,ne, t)
 endfunction
 
 function syst = matiter(cp,dp)
-    // Construit la matrice d'iteration pour la resolution numerique de la reponse forcee
+    // Retourne la matrice creuse d'iteration pour la resolution numerique de la reponse forcee
     // cp : vecteur des coefficients d amortissement normalises
     // dp : vecteur des pulsations carrees normalises
     nm = length(cp); // nombre de modes
@@ -121,6 +121,7 @@ function syst = matiter(cp,dp)
     dia(2:2:2*nm) = cp; // 0 c1 0 ... 0 cp 0 ... 0 cnm
     
     syst = diag(dia) + diag(dinf, -1) + diag(dsup, 1);
+    syst = sparse(syst);
 endfunction
 
 function W = eigenvscale(c, V)
