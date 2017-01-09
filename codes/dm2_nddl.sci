@@ -53,7 +53,13 @@ function [K, M]=assemblage(Ne)
             for l=1:4 // j et l = index dans la matrice elementaire
                 idg1 = tab(i,j); idg2 = tab(i,l); // idgi = index dans la matrice globale
                 K(idg1,idg2) = K(idg1,idg2) + ke(j,l);
-                M(idg1,idg2) = M(idg1,idg2) + me(j,l);
+                M(idg1,idg2) = M(idg1,idg2) + me(j,l); 
+I = b*h^3; // m4 moment d'inertie de section
+EI = E*I;
+S = b*h; // m2 surface de section
+// Sollicitation
+w = 5000; // 2*pi/s pulsation de l'excitation
+// Disqueg2) = M(idg1,idg2) + me(j,l);
             end
         end
     end
@@ -81,47 +87,7 @@ function [K, M]=assemblage(Ne)
     // Deplacement nul sur l avant dernier ddl (V_(nddl-1)=0)
     K = K([2:nddl-2,nddl],[2:nddl-2,nddl]);
     M = M([2:nddl-2,nddl],[2:nddl-2,nddl]);
-
-    //    K(1,:) = 0; M(1,:) = 0;
-    //    K(:,1) = 0; M(:,1) = 0;
-    //    K(1,1) = 1; M(1,1) = 1;
-    //    // Deplacement nul sur l avant dernier ddl (V=0)
-    //    K(nddl-1,:) = 0; M(nddl-1,:) = 0;
-    //    K(:,nddl-1) = 0; M(:,nddl-1) = 0;
-    //    K(nddl-1,nddl-1) = 1; M(nddl-1,nddl-1) = 1;       
-endfunction
-
-function f = sollicit(w,f0,ne, t)
-    // Vecteur des forces harmoniques nodales
-    // f : vecteur des forces nodales
-    // w : pulsation de la sollicitation
-    // f0 : amplitude initiale
-    // ne : nombre d'elements
-    // t : vecteur des temps
-    nddl = 2*ne+2;
-    f = zeros(nddl,length(t));
-    f(nddl/2-1,:) = f0*cos(w*t);
-    // Prise en compte des CL
-    f = f([2:nddl-2, nddl],:);
-    //
-endfunction
-
-function syst = matiter(cp,dp)
-    // Retourne la matrice creuse d'iteration pour la resolution numerique de la reponse forcee
-    // cp : vecteur des coefficients d amortissement normalises
-    // dp : vecteur des pulsations carrees normalises
-    nm = length(cp); // nombre de modes
-    
-    dinf = zeros(2*nm-1,1); // diagonale inferieure de la matrice
-    dia = zeros(2*nm,1);
-    dsup = repmat([1; 0],nm-1, 1); // diagonale superieure
-    dsup = [dsup; 1]; // 1 0 1 0 ... 1 0 1 0 ... 1 0 1 0 1
-    
-    dinf(1:2:2*nm) = dp; // d1 0 d2 0 ... 0 dp 0 ... 0 dnm
-    dia(2:2:2*nm) = cp; // 0 c1 0 ... 0 cp 0 ... 0 cnm
-    
-    syst = diag(dia) + diag(dinf, -1) + diag(dsup, 1);
-    syst = sparse(syst);
+     
 endfunction
 
 function W = eigenvscale(c, V)
@@ -140,9 +106,9 @@ function mp = vmodales(V, M) // Carre scalaire d'un vecteur propre au sens de M
     // M : matrice de masse
     // Marche pour K, M et C -> analyse modale
     n = size(V,1); // ordre du systeme
-    mp = zeros(n,1);
+    mp = [];
     for i = 1:n
-        mp(i) = V(:,i)'*M*V(:,i);
+        mp = [mp;V(:,i)'*M*V(:,i)];
     end
 endfunction
 
@@ -181,30 +147,9 @@ function phix = base(X, ne, k, Phi)
     phix = Phi(xi); // fonction de forme dans l'espace physique
 endfunction
 
-//function phix = base(X, ne, k, H)
-//    // Trace des fonctions de bases dans l'espace physique [0,L]. Rotation
-//    // ne : nombre d'elements
-//    // dx : longueur d'un element
-//    // X : vecteur des abscisses [0,L]
-//    // k : numero de l'element concerne
-//    dx = L/ne;
-//    // passage entre la liste des noeuds et la liste des abscisses references dans x
-//    npoints = length(X); // nombre d'abscisses dans x
-//    nint = npoints - 1; // nombre d'intervalles dans x. Chaque intervalle separe deux points xk et xk+1
-//    npint = nint/ne + 1; // nombre de points constituant un intervalle entre xi et xi+1
-//
-//    xi = linspace(-1, 1, npint); // xi dans l'espace de reference
-//    xk1 = X((npint-1)*(k+1) + 2 - npint); // abscisse de xk+1
-//    xk = X((npint-1)*k + 2 - npint); // abscisse de xk
-//    x = linspace(xk, xk1, npint); //dx*xi/2 + (xk1 + xk)/2; // x dans l'espace physique [xk, xk+1]
-//
-//    phix = zeros(1,npoints); // fonction de basse continue par morceau et a support dans [xi,xi+1]
-//    phix((npint-1)*k + 2 - npint:(npint-1)*(k+1) + 2 - npint) = dx*H(xi); // fonction de forme dans l'espace physique
-//endfunction
-
 function vx = defmodale(X, V)
     // Deformation modale sur [0,L]
-    // X : vecteur abscisse dans [0,L]
+    // X : vecteur abscpsse dans [0,L]
     // V : vecteur propres
     // ne : nombre d'elements
     // Sortie :
@@ -213,7 +158,7 @@ function vx = defmodale(X, V)
     nddl = N+2; // nombre totale de degres de libertes, CL de Dirichlet incluses
     nel = nddl/2 - 1; // nombre d'elements
 
-    npoints = length(X); // nombre d'abscisses dans x
+    npoints = length(X); // nombre d'abscpsses dans x
     nint = npoints - 1; // nombre d'intervalles dans x. Chaque intervalle separe deux points xk et xk+1
     npint = nint/ne + 1; // nombre de points constituant un intervalle entre xi et xi+1
 
@@ -228,4 +173,73 @@ function vx = defmodale(X, V)
         idg4 = tab(i,4); // indice globale du theta à droite de l'element i
         vx((npint-1)*i + 2 - npint:(npint-1)*(i+1) + 2 - npint) = v(idg1)*base(X, nel, i, n1) + dx*v(idg2)*base(X, nel, i, h1) + v(idg3)*base(X, nel, i, n2) + dx*v(idg4)*base(X, nel, i, h2);
     end
+endfunction
+
+function f = sollicit(f0,ne)
+    // Vecteur des forces harmoniques nodales
+    // f : vecteur des forces nodales
+    // w : pulsation de la sollicitation
+    // f0 : amplitude initiale
+    // ne : nombre d'elements
+    // t : vecteur des temps
+    nddl = 2*ne+2;
+    f = zeros(nddl,1);
+    f(nddl/2-1,:) = f0; // La force ne s'applique que sur la masse
+    // Prise en compte des CL
+    f = f([2:nddl-2, nddl]);
+    //
+endfunction
+
+function [syst] = matiter(cp, dp, ne)
+    // Retourne la matrice creuse d'iteration pour la resolution numerique de la reponse forcee
+    // cp : vecteur des coefficients d amortissement normalises
+    // dp : vecteur des pulsations carrees normalises
+    nm = length(cp); // nombre de modes
+    
+    dinf = zeros(2*nm-1,1); // diagonale inferieure de la matrice
+    dia = zeros(2*nm,1);
+    dsup = repmat([1; 0],nm-1, 1); // diagonale superieure
+    dsup = [dsup; 1]; // 1 0 1 0 ...ite 1 0 1 0 ... 1 0 1 0 1
+
+    dinf(1:2:2*nm) = dp; // d1 0 d2 0 ... 0 dp 0 ... 0 dnm
+    dia(2:2:2*nm) = cp; // 0 c1 0 ... 0 cp 0 ... 0 cnm
+
+    syst = -diag(dia) - diag(dinf, -1) + diag(dsup, 1);
+    //syst = sparse(syst);
+endfunction
+
+function Q = reform(q, ne)
+    // transforme un vecteur pour l'adapter au systeme d'equation differentielle numerique
+    nm = 2*ne + 2 - 2; // nombre de ddl
+    q = inv(B)*q; // passage dans l'espace normal
+    Q = zeros(2*nm,1);
+    Q(2:2:$) = q; 
+endfunction
+
+function qdot = iter(t, q)
+    // q: vecteur des deplacements modaux dans la base normale
+    qdot = A*q + fp*cos(w*t);
+endfunction
+
+function Q = rvf(cp, dp, Q0, w, Fp, ne, t)
+    // Q0 : conditions initiales dans la base normale
+    aa = matiter(cp, dp, ne);
+    Q = [];
+    for i=1:2:2*ne+1
+        fp = Fp(i:i+1);
+        A = aa([i,i+1],[i,i+1]);
+        qp = ode(Q0(i:i+1), 0, t, iter);
+        Q = [Q ; qp];
+    end
+endfunction
+
+function xp = repmodale(w, wi, ci, fp, t)
+    n = length(wi);
+    xp = [];
+    for i = 1:n
+        gammai = (c1 + c2*wi(i)^2)/2/wi(i);
+        betai = 1/sqrt((1-w^2/wi(i)^2)^2 + (2*gammai));
+        phii = atan(2*gammai*(w/wi(i))/(1 - w^2/wi(i)^2));
+        xp = [xp; fp(i)/wi(i)^2*betai*cos(w*t - phii)];
+    end   
 endfunction
